@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo == Copying env files ==
+#cp env-example .env
+echo "UID=$(id -u)" >> .env
+echo "GID=$(id -g)" >> .env
+echo
+
+echo == Creating volumes ==
+sudo docker volume create --name source-postgres
+echo
+
+echo == Building docker compose ==
+sudo docker-compose build
+echo
+
+echo == Initializing database ==
+sudo docker-compose run --rm source rake db:reset
+sudo docker-compose run --rm source rake db:migrate
+sudo docker-compose run --rm source rake db:test:prepare
+echo
+
+echo == Generating secret ==
+echo "SECRET_TOKEN=$(sudo docker-compose run --rm source rake secret)" >> .env
+echo == END ==

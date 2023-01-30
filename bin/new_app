@@ -1,0 +1,44 @@
+#!/bin/bash
+
+read -p 'Enter project name to be created: ' name
+read -p 'Enter app server of your choice unicorn/puma? ' server
+read -p 'Do you need S3 Y/N? ' s3_option
+read -p 'Do you need Elastic Search and Kibana? Y/N ' es_option
+
+cp env-example .env
+cp -a ../docker-boiler ../$name
+cd ../$name
+sudo rm -rf bin/new_app
+grep -lR "????" ./env-example | xargs sed -i "s/????/$name/g"
+echo "$server"
+cp "example-dockerfile-$server" Dockerfile
+cp "example-nginx-$server" reverse-proxy.conf
+if [ $s3_option == "Y" ]
+then
+	echo "Inside yes"
+	cp "example-S3-storage-conf" source/config/storage.yml
+	read -p 'Please enter access key id ' access_key_id
+	read -p 'Please enter secret access key ' secret_access_key
+	read -p 'Please enter AWS region ' region
+	read -p 'Please enter bucket name ' bucket_name
+
+	echo "ACCESS_KEY_ID=$access_key_id" >> .env
+	echo "SECRET_ACCESS_KEY=$secret_access_key" >> .env
+	echo "AWS_REGION=$region" >> .env
+	echo "BUCKET_NAME=$bucket_name" >> .env
+fi
+
+if [ $es_option == "Y" ]
+then
+  echo "Inside es yes"
+  read -p 'Please enter elasticsearch host ' es_host
+  echo "ELASTICSEARCH_HOSTS=$es_host" >> .env
+else
+ sed -i '52,68 s/^/#/' docker-compose.yml
+fi
+
+sudo rm -rf example-dockerfile-puma example-dockerfile-unicorn example-nginx-puma example-nginx-unicorn example-S3-storage-conf
+sudo rm -rf .git
+git init -q
+git checkout -qb main
+$SHELL
