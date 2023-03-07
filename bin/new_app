@@ -6,7 +6,7 @@ read -p 'Do you need S3 Y/N? ' s3_option
 read -p 'Do you need Elastic Search and Kibana? Y/N ' es_option
 
 cp env-example .env
-cp -a ../docker-boiler ../$name
+cp -a ../Docker-Boilerplate ../$name
 cd ../$name
 sudo rm -rf bin/new_app
 grep -lR "????" ./env-example | xargs sed -i "s/????/$name/g"
